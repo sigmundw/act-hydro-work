@@ -8,14 +8,12 @@ To get started, you'll want to set up your `conda` environment, which you can do
 ```shell
 $ conda env create --file utils/hydro-environment.yaml
 ```
-Then activate the `hydro-env` environment. 
+Then activate the `hydro-env` environment. Also make sure to install `parallel` from your package manager of choice. 
 
-Most subdirectories also contain `Makefile`s that can help you run them faster.
+Most subdirectories also contain `Makefile`s that can help you run them faster. Be sure to give those a read as well.
 
 ## Improvements
 - Need to update Python environment to Python 10
-- Actually write the Makefiles out
-- Need to write per-section documentation.
 
 ## License
 All code is MIT licensed. 

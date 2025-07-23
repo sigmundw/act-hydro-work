@@ -1,0 +1,2 @@
+# Utilities
+This contains a variety of small files that don't fit anywhere else in the tree. The `hydro-environment.yaml` file should be imported to make a new `conda` environment for your package, as seen [in the README](../README.md). You may also wish to take a look at `xarray_cacher.py` if you're running the legacy code, or find `zeitcache` a bit confusing to use. Be warned: `zeitcache` was written for a reason. `xarray_cacher.py` is slow and deadly and full of unlabeled sharp bits that will make it hard for you to write reliable code. 
