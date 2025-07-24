@@ -354,6 +354,29 @@ log_file.write(f"precip_M values: {list(zip(precip_values_debug_M,years_M))}\n")
 
 log_file.close()
 
+## netCDF exporting
+## expand this if you want more of them in the files
+variables_historical = {
+    "temp_P": temp_values_P,
+}
+variables_future = {
+    "temp_H": temp_values_H,
+    "temp_M": temp_values_M,
+}
+ds_historical = xr.Dataset(
+    {k: ("year", v) for k, v in variables_historical.items()},
+    coords={"year": years_P},
+)
+ds_future = xr.Dataset(
+    {k: ("year", v) for k, v in variables_future.items()},
+    coords={"year": years_H},
+)
+historical_file_name = f"runoff_ratio/{region_dic[magic]}_djfm_hist_data.nc"
+future_file_name = f"runoff_ratio/{region_dic[magic]}_djfm_future_data.nc"
+ds_historical.to_netcdf(historical_file_name)
+ds_future.to_netcdf(future_file_name)
+
+
 # stupid hack but kinda works actually
 xmin, xmax = all_precips.min() - 5, all_precips.max() + 5
 #xmin, xmax = -150, 150
