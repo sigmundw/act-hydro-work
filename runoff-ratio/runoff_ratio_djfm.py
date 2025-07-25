@@ -50,11 +50,16 @@ qrunoff_paths = ["/data/shared_data/NNA/NNA.4km.hERA5.1989.003/qrunoff_m/*.nc",
                  "/data/shared_data/NNA/NNA.4km.fPGWh.2033.004/qrunoff_m/*.nc",
                  "/data/shared_data/NNA/NNA.4km.fPGWm.2033.005/qrunoff_m/*.nc" ]
 
+qflx_evap_paths = ["/data/shared_data/NNA/NNA.4km.hERA5.1989.003/qflx_evap_tot_m/*.nc",
+                 "/data/shared_data/NNA/NNA.4km.fPGWh.2033.004/qflx_evap_tot_m/*.nc",
+                 "/data/shared_data/NNA/NNA.4km.fPGWm.2033.005/qflx_evap_tot_m/*.nc" ]
+
 snow_P, snow_H, snow_M = unpacker(snow_paths, "SNOW")
 rain_P, rain_H, rain_M = unpacker(rain_paths, "RAIN")
 temp_P, temp_H, temp_M = unpacker(temp_paths, "TSA")
 better_h2osno_P, better_h2osno_H, better_h2osno_M = unpacker(better_h2osno_paths, "H2OSNO")
 qrunoff_P, qrunoff_H, qrunoff_M = unpacker(qrunoff_paths, "QRUNOFF")
+qflx_evap_P, qflx_evap_H, qflx_evap_M = unpacker(qflx_evap_paths, "QFLX_EVAP_TOT")
 
 ### Data editing
 ## Constants
@@ -145,6 +150,15 @@ annual_temp_P = cache_xarray(compute_annual_generic, total_temp_P, name_hint="an
 annual_temp_H = cache_xarray(compute_annual_generic, total_temp_H, name_hint="annual_temp_H")
 annual_temp_M = cache_xarray(compute_annual_generic, total_temp_M, name_hint="annual_temp_M")
 
+## Evapotranspiration
+total_qflx_evap_P = qflx_evap_P
+total_qflx_evap_H = qflx_evap_H
+total_qflx_evap_M = qflx_evap_M
+
+annual_qflx_evap_P = cache_xarray(compute_annual_generic, total_qflx_evap_P, name_hint="total_qflx_evap_P")
+annual_qflx_evap_H = cache_xarray(compute_annual_generic, total_qflx_evap_H, name_hint="total_qflx_evap_H")
+annual_qflx_evap_M = cache_xarray(compute_annual_generic, total_qflx_evap_M, name_hint="total_qflx_evap_M")
+
 ### Data visualization: Cartesian grid (but for wintertime)
 
 ## REGIONAL
@@ -168,6 +182,7 @@ region_dic = {1:"West Coast",
               12:"Central Panhandle",
               13:"South Panhandle"}
 
+## shadowing ALL the variables with filtered ones
 total_qrunoff_P = total_qrunoff_P.where(model_grid.OBJECTID.values == magic)
 total_qrunoff_H = total_qrunoff_H.where(model_grid.OBJECTID.values == magic)
 total_qrunoff_M = total_qrunoff_M.where(model_grid.OBJECTID.values == magic)
@@ -179,6 +194,18 @@ total_temp_M = total_temp_M.where(model_grid.OBJECTID.values == magic)
 total_precip_P = total_precip_P.where(model_grid.OBJECTID.values == magic)
 total_precip_H = total_precip_H.where(model_grid.OBJECTID.values == magic)
 total_precip_M = total_precip_M.where(model_grid.OBJECTID.values == magic)
+
+total_rain_P = total_rain_P.where(model_grid.OBJECTID.values == magic)
+total_rain_H = total_rain_H.where(model_grid.OBJECTID.values == magic)
+total_rain_M = total_rain_M.where(model_grid.OBJECTID.values == magic)
+
+total_snow_P = total_snow_P.where(model_grid.OBJECTID.values == magic)
+total_snow_H = total_snow_H.where(model_grid.OBJECTID.values == magic)
+total_snow_M = total_snow_M.where(model_grid.OBJECTID.values == magic)
+
+total_evap_P = total_qflx_evap_P.where(model_grid.OBJECTID.values == magic)
+total_evap_H = total_qflx_evap_H.where(model_grid.OBJECTID.values == magic)
+total_evap_M = total_qflx_evap_M.where(model_grid.OBJECTID.values == magic)
 
 # important helper function to get a winter season
 def winterizer(ds, dataset_name, scale_by_time=True):
@@ -248,6 +275,18 @@ temp_values_debug_P = [(winterizer(total_temp_P, f"winterized_temp_P_{magic}", s
 # x axis
 precip_values_debug_P = [(winterizer(total_precip_P, f"winterized_precip_P_{magic}").sel(season_year=x)).item()
                          for x in years_P]
+# snow (sanity check)
+snow_values_debug_P = [(winterizer(total_snow_P, f"winterized_snow_P_{magic}").sel(season_year=x)).item()
+                         for x in years_P]
+# rain (sanity check)
+rain_values_debug_P = [(winterizer(total_rain_P, f"winterized_rain_P_{magic}").sel(season_year=x)).item()
+                         for x in years_P]
+# runoff (sanity check)
+runoff_values_debug_P = [(winterizer(total_runoff_P, f"winterized_runoff_P_{magic}").sel(season_year=x))
+                         for x in years_P]
+# evap (sanity check)
+evap_values_debug_P = [(winterizer(total_evap_P, f"winterized_evap_P_{magic}").sel(season_year=x))
+                         for x in years_P]
 print("historical (P-DEBUG) done")
 
 ## FUTURE HOT
@@ -277,33 +316,57 @@ temp_values_debug_H = [(winterizer(total_temp_H, f"winterized_temp_H_{magic}", s
 # x axis
 precip_values_debug_H = [(winterizer(total_precip_H, f"winterized_precip_H_{magic}").sel(season_year=x).values).item()
                          for x in years_H]
+# snow (sanity check)
+snow_values_debug_H = [(winterizer(total_snow_H, f"winterized_snow_H_{magic}").sel(season_year=x)).item()
+                         for x in years_H]
+# rain (sanity check)
+rain_values_debug_H = [(winterizer(total_rain_H, f"winterized_rain_H_{magic}").sel(season_year=x)).item()
+                         for x in years_H]
+# runoff (sanity check)
+runoff_values_debug_H = [(winterizer(total_runoff_H, f"winterized_runoff_H_{magic}").sel(season_year=x))
+                         for x in years_H]
+# evap (sanity check)
+evap_values_debug_H = [(winterizer(total_evap_H, f"winterized_evap_H_{magic}").sel(season_year=x))
+                         for x in years_H]
 print("future (H-DEBUG) done")
 
 ## FUTURE MODERATE
 # color
-precip_ratio_values_M = [(winterizer(total_qrunoff_M, f"summerized_qrunoff_M_{magic}").sel(season_year=x).values / winterizer(total_precip_M, f"summerized_precip_M_{magic}").sel(season_year=x).values).item()
+precip_ratio_values_M = [(winterizer(total_qrunoff_M, f"winterized_qrunoff_M_{magic}").sel(season_year=x).values / winterizer(total_precip_M, f"winterized_precip_M_{magic}").sel(season_year=x).values).item()
            for x in years_M]
 # y axis 
-temp_values_M = [(winterizer(total_temp_M, f"summerized_temp_M_{magic}", scale_by_time=False).sel(season_year=x).values).item() - y_origin
+temp_values_M = [(winterizer(total_temp_M, f"winterized_temp_M_{magic}", scale_by_time=False).sel(season_year=x).values).item() - y_origin
            for x in years_M]
 # x axis
-precip_values_M = [(winterizer(total_precip_M, f"summerized_precip_M_{magic}").sel(season_year=x).values).item() - x_origin
+precip_values_M = [(winterizer(total_precip_M, f"winterized_precip_M_{magic}").sel(season_year=x).values).item() - x_origin
            for x in years_M]
 print("future (M) done")
 
 ## FUTURE MODERATE-DEBUG
 # color
-precip_ratio_values_debug_M = winterizer(total_qrunoff_M, f"summerized_qrunoff_M_{magic}").values / winterizer(total_precip_M, f"summerized_precip_M_{magic}").values
+precip_ratio_values_debug_M = winterizer(total_qrunoff_M, f"winterized_qrunoff_M_{magic}").values / winterizer(total_precip_M, f"winterized_precip_M_{magic}").values
 print(f"sanity test: is debug and real equal (precipitation M)? {precip_ratio_values_M == precip_ratio_values_debug_M}")
 
 # runoff
-runoff_values_debug_M = [(winterizer(total_qrunoff_M, f"summerized_qrunoff_M_{magic}").sel(season_year=x).values).item()
+runoff_values_debug_M = [(winterizer(total_qrunoff_M, f"winterized_qrunoff_M_{magic}").sel(season_year=x).values).item()
                          for x in years_M]
 # y axis 
-temp_values_debug_M = [(winterizer(total_temp_M, f"summerized_temp_M_{magic}", scale_by_time=False).sel(season_year=x).values).item()
+temp_values_debug_M = [(winterizer(total_temp_M, f"winterized_temp_M_{magic}", scale_by_time=False).sel(season_year=x).values).item()
                        for x in years_M]
 # x axis
-precip_values_debug_M = [(winterizer(total_precip_M, f"summerized_precip_M_{magic}").sel(season_year=x).values).item()
+precip_values_debug_M = [(winterizer(total_precip_M, f"winterized_precip_M_{magic}").sel(season_year=x).values).item()
+                         for x in years_M]
+# snow (sanity check)
+snow_values_debug_M = [(winterizer(total_snow_M, f"winterized_snow_M_{magic}").sel(season_year=x)).item()
+                         for x in years_M]
+# rain (sanity check)
+rain_values_debug_M = [(winterizer(total_rain_M, f"winterized_rain_M_{magic}").sel(season_year=x)).item()
+                         for x in years_M]
+# runoff (sanity check)
+runoff_values_debug_M = [(winterizer(total_runoff_M, f"winterized_runoff_M_{magic}").sel(season_year=x))
+                         for x in years_M]
+# evap (sanity check)
+evap_values_debug_M = [(winterizer(total_evap_M, f"winterized_evap_M_{magic}").sel(season_year=x))
                          for x in years_M]
 print("future (M-DEBUG) done")
 
@@ -357,11 +420,26 @@ log_file.close()
 ## netCDF exporting
 ## expand this if you want more of them in the files
 variables_historical = {
-    "temp_P": temp_values_P,
+    "temp_P": temp_values_debug_P,
+    "snow_P": snow_values_debug_P,
+    "rain_P": rain_values_debug_P,
+    "precip_P": precip_values_debug_P,
+    "runoff_P": runoff_values_debug_P,
+    "evap_P": evap_values_debug_P,
 }
 variables_future = {
-    "temp_H": temp_values_H,
-    "temp_M": temp_values_M,
+    "temp_H": temp_values_debug_H,
+    "snow_H": snow_values_debug_H,
+    "rain_H": rain_values_debug_H,
+    "precip_H": precip_values_debug_H,
+    "runoff_H": runoff_values_debug_H,
+    "evap_H": evap_values_debug_H,
+    "temp_M": temp_values_debug_M,
+    "snow_M": snow_values_debug_M,
+    "rain_M": rain_values_debug_M,
+    "precip_M": precip_values_debug_M,
+    "runoff_M": runoff_values_debug_M,
+    "evap_M": evap_values_debug_M,
 }
 ds_historical = xr.Dataset(
     {k: ("year", v) for k, v in variables_historical.items()},
